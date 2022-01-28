@@ -1,0 +1,45 @@
+env:
+    MANIFEST: git://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git
+    MANIFEST_BRANCH: twrp-10.0-deprecated
+    DEVICE: sdm450
+    DT_LINK: https://github.com/AtarvNegi2951/recovery_device_samsung_sdm450
+    DT_PATH: device/samsung/sdm450
+    LUNCH_TARGET: omni
+    TARGET: recoveryimage
+
+task:
+  name: "Building recovery"
+  timeout_in: 240m  
+  container:
+      image: marvelmathesh/docker:rom
+      cpu: 8
+      memory: 32G
+  
+  Sync_script:
+      - mkdir ~/OrangeFox_sync
+      - cd ~/OrangeFox_sync
+      - git clone https://gitlab.com/OrangeFox/sync.git
+      - cd ~/OrangeFox_sync/sync/
+      - ./orangefox_sync.sh --branch 10.0 --path ~/fox_10.0
+      - cd ~/fox_10.0
+      - git clone $DT_LINK $DT_PATH
+      - git clone https://github.com/Atharv2951-Roms/ofrp_avtar img
+
+  Build_script:
+      - cd ~/fox_10.0
+      - export ALLOW_MISSING_DEPENDENCIES=true
+      - export FOX_USE_TWRP_RECOVERY_IMAGE_BUILDER=1
+      - export LC_ALL="C"
+      - export USE_CCACHE=1
+      - export CCACHE_EXEC=/usr/bin/ccache
+      - ccache -M 50G
+      - . build/envsetup.sh
+      - lunch $LUNCH_TARGET_$DEVICE-eng
+      - mka $TARGET
+     
+  Upload_script:
+      - cd ~/fox_10.0
+      - cd out/target/product/$DEVICE
+      - ls -lh
+      - curl -sL https://git.io/file-transfer | sh 
+      - ./transfer wet *.zip
