@@ -8,7 +8,7 @@ env:
     TARGET: recoveryimage
 
 task:
-  name: "Building recovery"
+  name: "Building recovery for device"
   timeout_in: 240m  
   container:
       image: marvelmathesh/docker:rom
